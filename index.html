@@ -37,9 +37,9 @@
     h1 { margin:0; font-size:22px; font-weight:600; }
     header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
     input[type="search"]{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;min-width:220px;}
-    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;font-size:14px;}
+    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:14px;}
     .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;}
+    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;cursor:pointer;}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--g);}
     .card{border:1px solid #eee;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px;}
     .card img{width:100%;height:140px;object-fit:cover;border-radius:6px;}
@@ -47,25 +47,15 @@
     .meta{font-size:12px;color:#666;}
     #status{margin:14px 0;color:#444;}
     footer{margin-top:20px;font-size:13px;color:#666;}
-    a { color: inherit; text-decoration: none; }
-    a:hover { text-decoration: underline; }
-    footer {
-  margin-top: 20px;
-  font-size: 13px;
-  color: #666;
-  text-align: center;
-  padding: 12px 0;
-  border-top: 1px solid #eee;
-}
   </style>
 </head>
 
 <body>
   <header>
-    <h1>El Diario Noticias</h1>
+    <h1>Noticias — GNews</h1>
 
     <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Busca lo que sea...)">
+      <input id="q" type="search" placeholder="Buscar...">
       <button id="btnBuscar">Buscar</button>
     </div>
   </header>
@@ -78,23 +68,10 @@
     <div id="list" class="grid"></div>
   </main>
 
-<footer>© Agustín Díaz</footer>
+  <footer><span id="info">—</span></footer>
 
   <script>
-    // categorias: id -> etiqueta en español
-    const CATEGORIES = [
-      { id: "business", label: "Negocios" },
-      { id: "entertainment", label: "Entretenimiento" },
-      { id: "general", label: "General" },
-      { id: "health", label: "Salud" },
-      { id: "science", label: "Ciencia" },
-      { id: "sports", label: "Deportes" },
-      { id: "technology", label: "Tecnología" }
-    ];
-
-    // Mapa inverso para aceptar entradas en español escritas por el usuario
-    const SP_TO_ID = {};
-    CATEGORIES.forEach(c => { SP_TO_ID[c.label.toLowerCase()] = c.id; });
+    const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
 
     const qInput = document.getElementById("q");
     const btnBuscar = document.getElementById("btnBuscar");
@@ -103,16 +80,15 @@
     const list = document.getElementById("list");
     const info = document.getElementById("info");
 
-    // Render categorías (etiquetas en español)
+    // Render categorías
     CATEGORIES.forEach(cat => {
       const b = document.createElement("button");
-      b.textContent = cat.label;
-      b.onclick = () => load(cat.id);
+      b.textContent = cat;
+      b.onclick = () => load(cat);
       cats.appendChild(b);
     });
 
     async function fetchNews(q) {
-      // q puede ser id de categoría (p.ej. "business") o término de búsqueda
       const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
       const r = await fetch(url);
       if (!r.ok) throw new Error("Backend error " + r.status);
@@ -133,7 +109,7 @@
         el.className = "card";
         el.innerHTML = `
           ${a.image ? `<img src="${a.image}" alt="">` : ""}
-          <div class="title"><a href="${a.url}" target="_blank" rel="noopener noreferrer">${a.title}</a></div>
+          <div class="title"><a href="${a.url}" target="_blank">${a.title}</a></div>
           <div class="meta">${a.source?.name || ""} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleString() : ""}</div>
           <div>${a.description || ""}</div>
         `;
@@ -147,12 +123,7 @@
       list.innerHTML = "";
 
       try {
-        // Si el usuario escribió una categoría en español, mapearla al id
-        const qLower = (q || "").trim().toLowerCase();
-        const mapped = SP_TO_ID[qLower];
-        const qToSend = mapped || q || "general";
-
-        const data = await fetchNews(qToSend);
+        const data = await fetchNews(q);
         render(data.articles);
       } catch (err) {
         console.error(err);
@@ -161,19 +132,10 @@
       }
     }
 
-    btnBuscar.onclick = () => {
-      const raw = qInput.value.trim();
-      if (!raw) load("general");
-      else {
-        // si el usuario escribió nombre de categoría en español, mapear; si no, usar texto tal cual
-        const lower = raw.toLowerCase();
-        const mapped = SP_TO_ID[lower];
-        load(mapped || raw);
-      }
-    };
+    btnBuscar.onclick = () => load(qInput.value.trim() || "general");
     qInput.onkeydown = (e) => { if (e.key === "Enter") btnBuscar.click(); };
 
-    // Inicio: cargar General
+    // Inicio
     load("general");
   </script>
 </body>
