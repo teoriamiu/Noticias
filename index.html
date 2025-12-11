@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Noticias — GNews</title>
+
+  <style>
+    :root { --g: 12px; }
+    html,body { margin:0; padding:0; background:#fff; font-family:system-ui; color:#111; }
+    body { max-width:980px; margin:auto; padding:24px; }
+    h1 { margin:0; font-size:22px; font-weight:600; }
+    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
+    input[type="search"]{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;min-width:220px;}
+    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:14px;}
+    .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
+    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;cursor:pointer;}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--g);}
+    .card{border:1px solid #eee;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px;}
+    .card img{width:100%;height:140px;object-fit:cover;border-radius:6px;}
+    .title{font-weight:600;font-size:15px;}
+    .meta{font-size:12px;color:#666;}
+    #status{margin:14px 0;color:#444;}
+    footer{margin-top:20px;font-size:13px;color:#666;}
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Noticias — GNews</h1>
+
+    <div style="display:flex;gap:8px;">
+      <input id="q" type="search" placeholder="Buscar...">
+      <button id="btnBuscar">Buscar</button>
+    </div>
+  </header>
+
+  <div class="cats" id="cats"></div>
+
+  <div id="status">Cargando...</div>
+
+  <main>
+    <div id="list" class="grid"></div>
+  </main>
+
+  <footer><span id="info">—</span></footer>
+
+  <script>
+    const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
+
+    const qInput = document.getElementById("q");
+    const btnBuscar = document.getElementById("btnBuscar");
+    const cats = document.getElementById("cats");
+    const status = document.getElementById("status");
+    const list = document.getElementById("list");
+    const info = document.getElementById("info");
+
+    // Render categorías
+    CATEGORIES.forEach(cat => {
+      const b = document.createElement("button");
+      b.textContent = cat;
+      b.onclick = () => load(cat);
+      cats.appendChild(b);
+    });
+
+    async function fetchNews(q) {
+      const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error("Backend error " + r.status);
+      return await r.json();
+    }
+
+    function render(articles) {
+      list.innerHTML = "";
+      if (!articles || articles.length === 0) {
+        status.textContent = "No hay resultados.";
+        info.textContent = "0 resultados";
+        return;
+      }
+      status.textContent = "";
+      info.textContent = `Mostrando ${articles.length} noticias`;
+      articles.forEach(a => {
+        const el = document.createElement("div");
+        el.className = "card";
+        el.innerHTML = `
+          ${a.image ? `<img src="${a.image}" alt="">` : ""}
+          <div class="title"><a href="${a.url}" target="_blank">${a.title}</a></div>
+          <div class="meta">${a.source?.name || ""} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleString() : ""}</div>
+          <div>${a.description || ""}</div>
+        `;
+        list.appendChild(el);
+      });
+    }
+
+    async function load(q="general") {
+      status.textContent = "Cargando...";
+      info.textContent = "";
+      list.innerHTML = "";
+
+      try {
+        const data = await fetchNews(q);
+        render(data.articles);
+      } catch (err) {
+        console.error(err);
+        status.textContent = "Error cargando noticias.";
+        info.textContent = "—";
+      }
+    }
+
+    btnBuscar.onclick = () => load(qInput.value.trim() || "general");
+    qInput.onkeydown = (e) => { if (e.key === "Enter") btnBuscar.click(); };
+
+    // Inicio
+    load("general");
+  </script>
+</body>
+</html>
