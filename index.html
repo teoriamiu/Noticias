@@ -49,15 +49,23 @@
     footer{margin-top:20px;font-size:13px;color:#666;}
     a { color: inherit; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    footer {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  padding: 12px 0;
+  border-top: 1px solid #eee;
+}
   </style>
 </head>
 
 <body>
   <header>
-    <h1>Noticias — GNews</h1>
+    <h1>El Diario Noticias</h1>
 
     <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Buscar (puedes escribir 'negocios', 'deportes', etc.)">
+      <input id="q" type="search" placeholder="Busca lo que sea...)">
       <button id="btnBuscar">Buscar</button>
     </div>
   </header>
@@ -70,7 +78,7 @@
     <div id="list" class="grid"></div>
   </main>
 
-  <footer><span id="info">—</span></footer>
+<footer>© Agustín Díaz</footer>
 
   <script>
     // categorias: id -> etiqueta en español
