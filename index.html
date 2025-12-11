@@ -31,78 +31,66 @@
   <meta name="twitter:image" content="https://i.imgur.com/DApJ91v.jpeg">
 
   <style>
-    :root { --g: 12px; }
-    html,body { margin:0; padding:0; background:#fff; font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial; color:#111; }
+    :root { --g: 12px; --primary: #111; --muted: #666; }
+    html,body { margin:0; padding:0; background:#fff; font-family:system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; color:var(--primary); }
     body { max-width:980px; margin:auto; padding:24px; }
     h1 { margin:0; font-size:22px; font-weight:600; }
     header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
     input[type="search"]{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;min-width:220px;}
-    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:14px;}
+    button{padding:8px 12px;border:0;border-radius:8px;background:var(--primary);color:#fff;cursor:pointer;font-size:14px;}
     .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;cursor:pointer;}
+    .cats button{background:#fafafa;color:var(--primary);border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;cursor:pointer;transition:all .15s;}
+    .cats button:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,0,0,0.04);}
+    .cats button.active{background:var(--primary);color:#fff;border-color:var(--primary);}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--g);}
     .card{border:1px solid #eee;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px;}
     .card img{width:100%;height:140px;object-fit:cover;border-radius:6px;}
     .title{font-weight:600;font-size:15px;}
-    .meta{font-size:12px;color:#666;}
+    .meta{font-size:12px;color:var(--muted);}
     #status{margin:14px 0;color:#444;}
-    footer{margin-top:20px;font-size:13px;color:#666;}
-    a{color:inherit;}
-    .cat-active { background:#111;color:#fff;border-color:#111; }
+    footer{margin-top:20px;font-size:13px;color:var(--muted);}
+    .small{font-size:13px;color:var(--muted);}
   </style>
 </head>
 
 <body>
   <header>
     <h1>Noticias — GNews</h1>
-    <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Buscar...">
+
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="q" type="search" placeholder="Buscar (puede ser categoría: Salud, Deportes, Tecnología...)" />
       <button id="btnBuscar">Buscar</button>
     </div>
   </header>
 
   <div class="cats" id="cats"></div>
+
   <div id="status">Cargando...</div>
-  <main><div id="list" class="grid"></div></main>
+
+  <main>
+    <div id="list" class="grid"></div>
+  </main>
+
   <footer><span id="info">—</span></footer>
 
   <script>
-    /********** CONFIG **********/
-    const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
-    const CAT_LABELS = {
-      business: "Negocios",
-      entertainment: "Entretenimiento",
-      general: "General",
-      health: "Salud",
-      science: "Ciencia",
-      sports: "Deportes",
-      technology: "Tecnología"
+    // Mapa: etiqueta en español -> código en inglés que usa la API
+    const CATEGORY_MAP = {
+      "Negocios": "business",
+      "Entretenimiento": "entertainment",
+      "General": "general",
+      "Salud": "health",
+      "Ciencia": "science",
+      "Deportes": "sports",
+      "Tecnología": "technology"
     };
-    const CLIENT_CACHE_TTL = 60 * 5; // segundos -> 5 minutos
-    const DEBOUNCE_MS = 350;
 
-    /********** HELPERS **********/
-    function cacheSet(key, data, ttlSec = CLIENT_CACHE_TTL) {
-      try {
-        const obj = { t: Date.now(), ttl: ttlSec*1000, v: data };
-        localStorage.setItem(key, JSON.stringify(obj));
-      } catch (e) { /* ignore */ }
-    }
-    function cacheGet(key) {
-      try {
-        const s = localStorage.getItem(key);
-        if (!s) return null;
-        const obj = JSON.parse(s);
-        if (Date.now() - obj.t > obj.ttl) { localStorage.removeItem(key); return null; }
-        return obj.v;
-      } catch (e) { return null; }
-    }
-    function debounce(fn, wait = DEBOUNCE_MS) {
-      let t;
-      return (...a) => { clearTimeout(t); t = setTimeout(()=>fn(...a), wait); };
-    }
+    // Indexado auxiliar para detección por texto (minúsculas)
+    const SPANISH_TO_EN = {};
+    Object.keys(CATEGORY_MAP).forEach(k => {
+      SPANISH_TO_EN[k.toLowerCase()] = CATEGORY_MAP[k];
+    });
 
-    /********** DOM **********/
     const qInput = document.getElementById("q");
     const btnBuscar = document.getElementById("btnBuscar");
     const cats = document.getElementById("cats");
@@ -110,45 +98,67 @@
     const list = document.getElementById("list");
     const info = document.getElementById("info");
 
-    // render categories (labels in Spanish, but send english keys)
-    let activeCat = "general";
-    CATEGORIES.forEach(cat => {
+    // Estado UI
+    let activeCategory = "general"; // código en inglés
+    let activeLabel = "General";    // etiqueta en español
+
+    // Render botones de categorías (etiqueta en español)
+    Object.keys(CATEGORY_MAP).forEach(label => {
       const b = document.createElement("button");
-      b.textContent = CAT_LABELS[cat] || cat;
-      b.dataset.cat = cat;
+      b.textContent = label;
+      b.dataset.cat = CATEGORY_MAP[label]; // código en inglés
       b.onclick = () => {
-        // visually mark active
-        document.querySelectorAll('.cats button').forEach(x => x.classList.remove('cat-active'));
-        b.classList.add('cat-active');
-        activeCat = cat;
-        load(cat);
+        // marcar activo visualmente y cargar
+        setActiveButton(b);
+        load(CATEGORY_MAP[label], label);
       };
-      if (cat === activeCat) b.classList.add('cat-active');
       cats.appendChild(b);
     });
 
-    /********** NETWORK (client cache + fetch) **********/
-    async function fetchFromServer(q) {
-      const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
-      const r = await fetch(url, { credentials: 'same-origin' });
-      if (!r.ok) {
-        const txt = await r.text().catch(()=>"");
-        throw new Error(`Backend ${r.status}: ${txt}`);
+    // Marca el botón activo (clase .active)
+    function setActiveButton(btn) {
+      const all = cats.querySelectorAll("button");
+      all.forEach(x => x.classList.remove("active"));
+      if (btn) btn.classList.add("active");
+    }
+
+    // Intento de interpretar la búsqueda:
+    // - Si coincide exactamente (ignorando mayúsculas) con una categoría en español -> usamos esa categoría (código en inglés)
+    // - Si no, enviamos la búsqueda como texto libre a la API
+    function interpretQuery(raw) {
+      if (!raw) return { type: "category", q: "general", label: "General" }; // default
+      const s = raw.trim().toLowerCase();
+      // coincidencia exacta (palabra sola o etiqueta)
+      if (SPANISH_TO_EN[s]) {
+        // categoría detectada
+        // devolver código en inglés y etiqueta original capitalizada desde el mapa
+        const code = SPANISH_TO_EN[s];
+        // buscar label original (capitalizado) desde CATEGORY_MAP
+        const label = Object.keys(CATEGORY_MAP).find(k => CATEGORY_MAP[k] === code) || raw;
+        return { type: "category", q: code, label };
       }
+      // coincidencia parcial: si una palabra dentro coincide (ej. "noticias salud" -> salud)
+      const tokens = s.split(/\s+/);
+      for (const t of tokens) {
+        if (SPANISH_TO_EN[t]) {
+          const code = SPANISH_TO_EN[t];
+          const label = Object.keys(CATEGORY_MAP).find(k => CATEGORY_MAP[k] === code) || t;
+          return { type: "category", q: code, label };
+        }
+      }
+      // si no encontramos categoría, devolvemos texto libre (query)
+      return { type: "query", q: raw.trim(), label: `Búsqueda: "${raw.trim()}"` };
+    }
+
+    // Fetch hacia tu función Netlify (ruta que tenías)
+    async function fetchNews(q) {
+      const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
+      const r = await fetch(url);
+      if (!r.ok) throw new Error("Backend error " + r.status);
       return await r.json();
     }
 
-    async function fetchCached(q) {
-      const key = 'news_' + encodeURIComponent(q||'general');
-      const cached = cacheGet(key);
-      if (cached) return cached;
-      const data = await fetchFromServer(q);
-      cacheSet(key, data, CLIENT_CACHE_TTL);
-      return data;
-    }
-
-    /********** RENDER **********/
-    function renderArticles(articles) {
+    function render(articles) {
       list.innerHTML = "";
       if (!articles || articles.length === 0) {
         status.textContent = "No hay resultados.";
@@ -156,28 +166,34 @@
         return;
       }
       status.textContent = "";
-      info.textContent = `Mostrando ${articles.length} noticias`;
+      info.textContent = `Mostrando ${articles.length} noticias — ${activeLabel}`;
       articles.forEach(a => {
         const el = document.createElement("div");
         el.className = "card";
         el.innerHTML = `
           ${a.image ? `<img src="${a.image}" alt="">` : ""}
           <div class="title"><a href="${a.url}" target="_blank" rel="noopener noreferrer">${a.title}</a></div>
-          <div class="meta">${a.source?.name || ""} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleString() : ""}</div>
+          <div class="meta">${a.source?.name || ""}${a.publishedAt ? " · " + new Date(a.publishedAt).toLocaleString() : ""}</div>
           <div>${a.description || ""}</div>
         `;
         list.appendChild(el);
       });
     }
 
-    /********** LOAD (debounced) **********/
-    async function load(q = "general") {
+    // Carga principal: puede recibir q que sea código en inglés (categoría) o texto libre.
+    // activeLabel es la etiqueta que mostramos en UI (español o texto búsqueda).
+    async function load(q = "general", label = "General") {
+      activeCategory = q;
+      activeLabel = label || q;
+      // Actualizar estado UI
       status.textContent = "Cargando...";
       info.textContent = "";
       list.innerHTML = "";
+
       try {
-        const data = await fetchCached(q);
-        renderArticles(data.articles || []);
+        const data = await fetchNews(q);
+        render(data.articles);
+        status.textContent = "";
       } catch (err) {
         console.error(err);
         status.textContent = "Error cargando noticias.";
@@ -185,29 +201,33 @@
       }
     }
 
-    const debouncedLoad = debounce(q => load(q), DEBOUNCE_MS);
-
+    // Click en buscar: interpretar y cargar
     btnBuscar.onclick = () => {
-      const val = qInput.value.trim();
-      // if user typed category label in Spanish, map back to key if possible
-      const lower = val.toLowerCase();
-      const foundKey = Object.keys(CAT_LABELS).find(k => CAT_LABELS[k].toLowerCase() === lower);
-      debouncedLoad(foundKey || val || "general");
+      const raw = qInput.value.trim();
+      const result = interpretQuery(raw);
+      // Si es category, buscamos por el código en inglés.
+      if (result.type === "category") {
+        // marca el botón correspondiente (si existe)
+        const btn = Array.from(cats.querySelectorAll("button")).find(b => b.dataset.cat === result.q);
+        if (btn) setActiveButton(btn);
+        load(result.q, result.label);
+      } else {
+        // texto libre: quitar selección de botones
+        setActiveButton(null);
+        activeLabel = result.label;
+        load(result.q, result.label);
+      }
     };
 
-    qInput.addEventListener('keydown', e => { if (e.key === 'Enter') {
-      btnBuscar.click();
-    }});
-    qInput.addEventListener('input', e => {
-      // live suggestions shouldn't trigger server flood; debounce handles it
-      // don't auto-search on input to avoid unwanted requests, but allow manual search
-    });
+    // Enter en input dispara búsqueda
+    qInput.onkeydown = (e) => { if (e.key === "Enter") btnBuscar.click(); };
 
-    // inicial: marcar active y cargar general
-    document.querySelectorAll('.cats button').forEach(b => {
-      if (b.dataset.cat === activeCat) b.classList.add('cat-active');
-    });
-    load(activeCat);
+    // Inicial: marcar General y cargar
+    (function init() {
+      const defaultBtn = Array.from(cats.querySelectorAll("button")).find(b => b.dataset.cat === "general");
+      if (defaultBtn) setActiveButton(defaultBtn);
+      load("general", "General");
+    })();
   </script>
 </body>
 </html>
