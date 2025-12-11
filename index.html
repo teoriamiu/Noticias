@@ -48,6 +48,7 @@
     #status{margin:14px 0;color:#444;}
     footer{margin-top:20px;font-size:13px;color:#666;}
     a{color:inherit;}
+    .cat-active { background:#111;color:#fff;border-color:#111; }
   </style>
 </head>
 
@@ -68,6 +69,15 @@
   <script>
     /********** CONFIG **********/
     const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
+    const CAT_LABELS = {
+      business: "Negocios",
+      entertainment: "Entretenimiento",
+      general: "General",
+      health: "Salud",
+      science: "Ciencia",
+      sports: "Deportes",
+      technology: "Tecnología"
+    };
     const CLIENT_CACHE_TTL = 60 * 5; // segundos -> 5 minutos
     const DEBOUNCE_MS = 350;
 
@@ -100,10 +110,20 @@
     const list = document.getElementById("list");
     const info = document.getElementById("info");
 
+    // render categories (labels in Spanish, but send english keys)
+    let activeCat = "general";
     CATEGORIES.forEach(cat => {
       const b = document.createElement("button");
-      b.textContent = cat;
-      b.onclick = () => load(cat);
+      b.textContent = CAT_LABELS[cat] || cat;
+      b.dataset.cat = cat;
+      b.onclick = () => {
+        // visually mark active
+        document.querySelectorAll('.cats button').forEach(x => x.classList.remove('cat-active'));
+        b.classList.add('cat-active');
+        activeCat = cat;
+        load(cat);
+      };
+      if (cat === activeCat) b.classList.add('cat-active');
       cats.appendChild(b);
     });
 
@@ -167,12 +187,27 @@
 
     const debouncedLoad = debounce(q => load(q), DEBOUNCE_MS);
 
-    btnBuscar.onclick = () => debouncedLoad(qInput.value.trim() || "general");
-    qInput.addEventListener('keydown', e => { if (e.key === 'Enter') debouncedLoad(qInput.value.trim() || "general"); });
-    qInput.addEventListener('input', e => debouncedLoad(e.target.value.trim() || "general"));
+    btnBuscar.onclick = () => {
+      const val = qInput.value.trim();
+      // if user typed category label in Spanish, map back to key if possible
+      const lower = val.toLowerCase();
+      const foundKey = Object.keys(CAT_LABELS).find(k => CAT_LABELS[k].toLowerCase() === lower);
+      debouncedLoad(foundKey || val || "general");
+    };
 
-    // inicial
-    load("general");
+    qInput.addEventListener('keydown', e => { if (e.key === 'Enter') {
+      btnBuscar.click();
+    }});
+    qInput.addEventListener('input', e => {
+      // live suggestions shouldn't trigger server flood; debounce handles it
+      // don't auto-search on input to avoid unwanted requests, but allow manual search
+    });
+
+    // inicial: marcar active y cargar general
+    document.querySelectorAll('.cats button').forEach(b => {
+      if (b.dataset.cat === activeCat) b.classList.add('cat-active');
+    });
+    load(activeCat);
   </script>
 </body>
 </html>
