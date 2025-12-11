@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diario Noticias, 🌍 </title>
+  <title>Diario Noticias</title>
   
   <!-- SEO -->
   <meta name="description" content="Sitio moderno con noticias actualizadas.">
@@ -13,22 +13,9 @@
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://diario-noticias.netlify.app/">
   
-  <!-- SEO Redes Sociales -->
   <meta property="og:title" content="Diario Noticias">
   <meta property="og:description" content="Noticias al instante.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Mi+Web+Integrada">
-  
-  <meta property="og:title" content="¡El Super Alacrán Ha Llegado! 🦂🔥">
-  <meta property="og:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
-  <meta property="og:image" content="https://i.imgur.com/DApJ91v.jpeg">
-  <meta property="og:url" content="https://diario-noticias.netlify.app/">
-  <meta property="og:type" content="website">
-  
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="¡El Super Alacrán Ha Llegado! 🦂🔥">
-  <meta name="twitter:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
-  <meta name="twitter:image" content="https://i.imgur.com/DApJ91v.jpeg">
 
   <style>
     :root { --g: 12px; }
@@ -49,23 +36,15 @@
     footer{margin-top:20px;font-size:13px;color:#666;}
     a { color: inherit; text-decoration: none; }
     a:hover { text-decoration: underline; }
-    footer {
-  margin-top: 20px;
-  font-size: 13px;
-  color: #666;
-  text-align: center;
-  padding: 12px 0;
-  border-top: 1px solid #eee;
-}
   </style>
 </head>
 
 <body>
   <header>
-    <h1>El Diario Noticias</h1>
+    <h1>Noticias — GNews</h1>
 
     <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Busca lo que sea...)">
+      <input id="q" type="search" placeholder="Buscar (puedes escribir 'negocios', 'deportes', etc.)">
       <button id="btnBuscar">Buscar</button>
     </div>
   </header>
@@ -78,7 +57,7 @@
     <div id="list" class="grid"></div>
   </main>
 
-<footer>© Agustín Díaz</footer>
+  <footer><span id="info">—</span></footer>
 
   <script>
     // categorias: id -> etiqueta en español
