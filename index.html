@@ -2,14 +2,34 @@
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Diario Noticias — Todo en Español</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Diario Noticias, 🌍 </title>
+  
+  <!-- SEO -->
+  <meta name="description" content="Sitio moderno con noticias actualizadas.">
+  <meta name="keywords" content="Diario Noticias">
+  <meta name="author" content="Agustín Díaz">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://diario-noticias.netlify.app/">
+  
+  <!-- SEO Redes Sociales -->
+  <meta property="og:title" content="Diario Noticias">
+  <meta property="og:description" content="Noticias al instante.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Mi+Web+Integrada">
+  
+  <meta property="og:title" content="¡El Super Alacrán Ha Llegado! 🦂🔥">
+  <meta property="og:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
+  <meta property="og:image" content="https://i.imgur.com/DApJ91v.jpeg">
+  <meta property="og:url" content="https://diario-noticias.netlify.app/">
+  <meta property="og:type" content="website">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="¡El Super Alacrán Ha Llegado! 🦂🔥">
+  <meta name="twitter:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
+  <meta name="twitter:image" content="https://i.imgur.com/DApJ91v.jpeg">
 
-  <meta name="description" content="Sitio moderno con noticias actualizadas en español." />
-  <meta name="keywords" content="Diario Noticias" />
-  <meta name="author" content="Agustín Díaz" />
-  <meta name="robots" content="index, follow" />
 
   <style>
     :root { --g: 12px; }
@@ -28,16 +48,17 @@
     .meta{font-size:12px;color:#666;}
     #status{margin:14px 0;color:#444;}
     footer{margin-top:20px;font-size:13px;color:#666;}
-    .small{font-size:12px;color:#888;}
+    a { color: inherit; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 
 <body>
   <header>
-    <h1>Diario Noticias — Todo en español</h1>
+    <h1>Noticias — GNews</h1>
 
     <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Buscar..." />
+      <input id="q" type="search" placeholder="Buscar (puedes escribir 'negocios', 'deportes', etc.)">
       <button id="btnBuscar">Buscar</button>
     </div>
   </header>
@@ -50,32 +71,24 @@
     <div id="list" class="grid"></div>
   </main>
 
-  <footer><span id="info">—</span> · <span class="small">Traducciones via MyMemory (gratuito)</span></footer>
+  <footer><span id="info">—</span></footer>
 
   <script>
-    /***************************************************************************
-     * Configuración
-     ***************************************************************************/
-    // Categorías internas (API) y sus etiquetas en español (UI)
+    // categorias: id -> etiqueta en español
     const CATEGORIES = [
-      { key: "business", label: "Negocios" },
-      { key: "entertainment", label: "Entretenimiento" },
-      { key: "general", label: "General" },
-      { key: "health", label: "Salud" },
-      { key: "science", label: "Ciencia" },
-      { key: "sports", label: "Deportes" },
-      { key: "technology", label: "Tecnología" }
+      { id: "business", label: "Negocios" },
+      { id: "entertainment", label: "Entretenimiento" },
+      { id: "general", label: "General" },
+      { id: "health", label: "Salud" },
+      { id: "science", label: "Ciencia" },
+      { id: "sports", label: "Deportes" },
+      { id: "technology", label: "Tecnología" }
     ];
 
-    // Endpoint de traducción MyMemory
-    const MYMEMORY_ENDPOINT = 'https://api.mymemory.translated.net/get';
+    // Mapa inverso para aceptar entradas en español escritas por el usuario
+    const SP_TO_ID = {};
+    CATEGORIES.forEach(c => { SP_TO_ID[c.label.toLowerCase()] = c.id; });
 
-    // Concurrencia máxima de peticiones de traducción simultáneas
-    const TRANSLATE_CONCURRENCY = 6;
-
-    /***************************************************************************
-     * Elementos DOM
-     ***************************************************************************/
     const qInput = document.getElementById("q");
     const btnBuscar = document.getElementById("btnBuscar");
     const cats = document.getElementById("cats");
@@ -83,80 +96,22 @@
     const list = document.getElementById("list");
     const info = document.getElementById("info");
 
-    /***************************************************************************
-     * Render categorías (en español)
-     ***************************************************************************/
+    // Render categorías (etiquetas en español)
     CATEGORIES.forEach(cat => {
       const b = document.createElement("button");
       b.textContent = cat.label;
-      b.onclick = () => load(cat.key);
+      b.onclick = () => load(cat.id);
       cats.appendChild(b);
     });
 
-    /***************************************************************************
-     * Helpers: Fetch noticias desde tu backend
-     * (Se asume que tu función Netlify responde JSON con campo articles[])
-     ***************************************************************************/
     async function fetchNews(q) {
+      // q puede ser id de categoría (p.ej. "business") o término de búsqueda
       const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
       const r = await fetch(url);
       if (!r.ok) throw new Error("Backend error " + r.status);
       return await r.json();
     }
 
-    /***************************************************************************
-     * Traducción con MyMemory
-     * - Caché en memoria por sesión
-     * - Concurrencia limitada
-     ***************************************************************************/
-    const translationCache = new Map();
-
-    // Traduce un único texto -> devuelve texto traducido o texto original en fallo
-    async function translateText(text, target = 'es') {
-      if (!text || typeof text !== 'string' || text.trim() === '') return text;
-      const key = text + '||' + target;
-      if (translationCache.has(key)) return translationCache.get(key);
-
-      // Construimos la URL (langpair: auto|es para detectar idioma fuente)
-      const url = MYMEMORY_ENDPOINT + '?q=' + encodeURIComponent(text) + '&langpair=' + encodeURIComponent('auto|' + target);
-
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Traducción fallida ' + res.status);
-        const j = await res.json();
-        // MyMemory devuelve translatedText en responseData
-        const translated = (j && j.responseData && j.responseData.translatedText) ? j.responseData.translatedText : text;
-        translationCache.set(key, translated);
-        return translated;
-      } catch (e) {
-        console.warn('Error traduciendo:', e);
-        translationCache.set(key, text); // cacheamos original para no reintentar inútilmente
-        return text;
-      }
-    }
-
-    // Traduce múltiples textos con concurrencia limitada
-    async function translateMany(texts, target = 'es') {
-      // Normalizamos y recogemos únicos para evitar duplicados
-      const unique = Array.from(new Set(texts.filter(t => t && t.trim())));
-      const results = {};
-      // simple pool
-      let i = 0;
-      const pool = new Array(Math.min(TRANSLATE_CONCURRENCY, unique.length)).fill(0).map(async () => {
-        while (i < unique.length) {
-          const idx = i++;
-          const t = unique[idx];
-          const tr = await translateText(t, target).catch(() => t);
-          results[t] = tr;
-        }
-      });
-      await Promise.all(pool);
-      return results; // mapa original -> traducido
-    }
-
-    /***************************************************************************
-     * Render de artículos (usa traducciones)
-     ***************************************************************************/
     function render(articles) {
       list.innerHTML = "";
       if (!articles || articles.length === 0) {
@@ -166,77 +121,32 @@
       }
       status.textContent = "";
       info.textContent = `Mostrando ${articles.length} noticias`;
-
-      // Primero extraemos los textos que queremos traducir (para batch)
-      const toTranslate = [];
       articles.forEach(a => {
-        if (a.title) toTranslate.push(a.title);
-        if (a.description) toTranslate.push(a.description);
-        if (a.source && a.source.name) toTranslate.push(a.source.name);
-      });
-
-      // Ejecutamos la traducción en background y luego renderizamos
-      translateMany(toTranslate, 'es').then(map => {
-        list.innerHTML = "";
-        articles.forEach(a => {
-          const title = a.title ? (map[a.title] || a.title) : '';
-          const desc = a.description ? (map[a.description] || a.description) : '';
-          const src = (a.source && a.source.name) ? (map[a.source.name] || a.source.name) : '';
-          const published = a.publishedAt ? new Date(a.publishedAt).toLocaleString('es-AR') : '';
-
-          const el = document.createElement("div");
-          el.className = "card";
-          el.innerHTML = `
-            ${a.image ? `<img src="${a.image}" alt="">` : ""}
-            <div class="title"><a href="${a.url || '#'}" target="_blank" rel="noopener noreferrer">${escapeHtml(title)}</a></div>
-            <div class="meta">${escapeHtml(src)} · ${published}</div>
-            <div>${escapeHtml(desc)}</div>
-          `;
-          list.appendChild(el);
-        });
-      }).catch(err => {
-        console.error('Error en traducción batch', err);
-        // Si las traducciones fallan, renderizamos original
-        articles.forEach(a => {
-          const el = document.createElement("div");
-          el.className = "card";
-          el.innerHTML = `
-            ${a.image ? `<img src="${a.image}" alt="">` : ""}
-            <div class="title"><a href="${a.url || '#'}" target="_blank" rel="noopener noreferrer">${escapeHtml(a.title || '')}</a></div>
-            <div class="meta">${escapeHtml(a.source?.name || '')} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleString('es-AR') : ''}</div>
-            <div>${escapeHtml(a.description || '')}</div>
-          `;
-          list.appendChild(el);
-        });
+        const el = document.createElement("div");
+        el.className = "card";
+        el.innerHTML = `
+          ${a.image ? `<img src="${a.image}" alt="">` : ""}
+          <div class="title"><a href="${a.url}" target="_blank" rel="noopener noreferrer">${a.title}</a></div>
+          <div class="meta">${a.source?.name || ""} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleString() : ""}</div>
+          <div>${a.description || ""}</div>
+        `;
+        list.appendChild(el);
       });
     }
 
-    /***************************************************************************
-     * Utilidades
-     ***************************************************************************/
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    /***************************************************************************
-     * Carga principal
-     ***************************************************************************/
-    async function load(q = "general") {
+    async function load(q="general") {
       status.textContent = "Cargando...";
       info.textContent = "";
       list.innerHTML = "";
 
       try {
-        const data = await fetchNews(q);
-        // Si tu backend devuelve objeto como {articles: [...]}: lo respetamos
-        const articles = data.articles || data;
-        render(articles);
+        // Si el usuario escribió una categoría en español, mapearla al id
+        const qLower = (q || "").trim().toLowerCase();
+        const mapped = SP_TO_ID[qLower];
+        const qToSend = mapped || q || "general";
+
+        const data = await fetchNews(qToSend);
+        render(data.articles);
       } catch (err) {
         console.error(err);
         status.textContent = "Error cargando noticias.";
@@ -244,12 +154,20 @@
       }
     }
 
-    btnBuscar.onclick = () => load(qInput.value.trim() || "general");
+    btnBuscar.onclick = () => {
+      const raw = qInput.value.trim();
+      if (!raw) load("general");
+      else {
+        // si el usuario escribió nombre de categoría en español, mapear; si no, usar texto tal cual
+        const lower = raw.toLowerCase();
+        const mapped = SP_TO_ID[lower];
+        load(mapped || raw);
+      }
+    };
     qInput.onkeydown = (e) => { if (e.key === "Enter") btnBuscar.click(); };
 
-    // Inicio: cargar categoría general
+    // Inicio: cargar General
     load("general");
   </script>
 </body>
-
 </html>

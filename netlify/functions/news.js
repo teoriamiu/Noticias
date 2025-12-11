@@ -18,7 +18,6 @@ exports.handler = async function(event) {
   // CONFIG
   const CACHE_DIR = '/tmp/gnews_cache';
   const CACHE_TTL = 60 * 5; // segundos (5 min)
-  const CONCURRENCY = 4;     // concurrencia por batch
   const DEFAULT_PAGE_SIZE = 12;
 
   // utils cache FS
@@ -49,20 +48,41 @@ exports.handler = async function(event) {
 
   try {
     const params = event.queryStringParameters || {};
-    const rawQ = (params.q || "").trim();
+    let rawQ = (params.q || "").trim();
     const pageSize = Math.min(parseInt(params.pageSize || String(DEFAULT_PAGE_SIZE), 10) || DEFAULT_PAGE_SIZE, 50);
     const country = params.country || "ar";
+    // Allow overriding language via query param, default to Spanish
     const lang = params.lang || "es";
 
+    // IDs esperados por GNews
     const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
+
+    // Mapa para aceptar nombres en español y mapearlos al id en inglés
+    const SP_TO_ID = {
+      "negocios": "business",
+      "entretenimiento": "entertainment",
+      "general": "general",
+      "salud": "health",
+      "ciencia": "science",
+      "deportes": "sports",
+      "tecnología": "technology",
+      "tecnologia": "technology" // sin tilde
+    };
+
+    // Si user pasó una categoría en español (p. ej. 'salud'), mapear
+    const rawQLower = rawQ.toLowerCase();
+    if (SP_TO_ID[rawQLower]) {
+      rawQ = SP_TO_ID[rawQLower];
+    }
+
     const base = "https://gnews.io/api/v4";
     const isCategory = CATEGORIES.includes(rawQ) || rawQ === "";
     const endpoint = isCategory ? "/top-headlines" : "/search";
     const gnewsUrl = new URL(base + endpoint);
 
-    // Build URL to GNews (we request in 'en' for broader results; you can change to 'es')
+    // Build URL to GNews (request in chosen language, default 'es')
     gnewsUrl.searchParams.set("apikey", API_KEY);
-    gnewsUrl.searchParams.set("lang", "en");
+    gnewsUrl.searchParams.set("lang", lang);
     gnewsUrl.searchParams.set("max", String(pageSize));
 
     if (isCategory) {
@@ -81,7 +101,7 @@ exports.handler = async function(event) {
         headers: {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
-          "Cache-Control": "public, max-age=60" // CDN caché corto
+          "Cache-Control": "public, max-age=60"
         },
         body: JSON.stringify(cached)
       };
@@ -92,7 +112,6 @@ exports.handler = async function(event) {
     const text = await resp.text();
 
     if (!resp.ok) {
-      // forward error details
       let details;
       try { details = JSON.parse(text); } catch (e) { details = text; }
       return {
@@ -102,12 +121,9 @@ exports.handler = async function(event) {
       };
     }
 
-    // parse, optionally process, then cache
     let gjson;
     try { gjson = JSON.parse(text); } catch (e) { gjson = { articles: [] }; }
 
-    // Optionally: you could post-process articles here (trim fields, limit fields)
-    // Example: strip large fields to save cache space
     if (Array.isArray(gjson.articles)) {
       gjson.articles = gjson.articles.map(a => ({
         title: a.title,
@@ -119,16 +135,14 @@ exports.handler = async function(event) {
       }));
     }
 
-    // write cache
     try { writeCache(key, gjson); } catch (e) { /* ignore */ }
 
-    // return success with Cache-Control for CDN
     return {
       statusCode: 200,
       headers: {
         "Content-Type": "application/json",
         "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, max-age=60" // CDN cache 60s
+        "Cache-Control": "public, max-age=60"
       },
       body: JSON.stringify(gjson)
     };
