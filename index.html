@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diario Noticias</title>
+  <title>Diario Noticias, 🌍 </title>
   
   <!-- SEO -->
   <meta name="description" content="Sitio moderno con noticias actualizadas.">
@@ -13,9 +13,22 @@
   <meta name="robots" content="index, follow">
   <link rel="canonical" href="https://diario-noticias.netlify.app/">
   
+  <!-- SEO Redes Sociales -->
   <meta property="og:title" content="Diario Noticias">
   <meta property="og:description" content="Noticias al instante.">
   <meta property="og:type" content="website">
+  <meta property="og:image" content="https://via.placeholder.com/1200x630.png?text=Mi+Web+Integrada">
+  
+  <meta property="og:title" content="¡El Super Alacrán Ha Llegado! 🦂🔥">
+  <meta property="og:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
+  <meta property="og:image" content="https://i.imgur.com/DApJ91v.jpeg">
+  <meta property="og:url" content="https://diario-noticias.netlify.app/">
+  <meta property="og:type" content="website">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="¡El Super Alacrán Ha Llegado! 🦂🔥">
+  <meta name="twitter:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
+  <meta name="twitter:image" content="https://i.imgur.com/DApJ91v.jpeg">
 
   <style>
     :root { --g: 12px; }
@@ -24,9 +37,9 @@
     h1 { margin:0; font-size:22px; font-weight:600; }
     header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
     input[type="search"]{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;min-width:220px;}
-    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:14px;}
+    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;font-size:14px;}
     .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;cursor:pointer;}
+    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;}
     .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--g);}
     .card{border:1px solid #eee;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px;}
     .card img{width:100%;height:140px;object-fit:cover;border-radius:6px;}
@@ -36,15 +49,23 @@
     footer{margin-top:20px;font-size:13px;color:#666;}
     a { color: inherit; text-decoration: none; }
     a:hover { text-decoration: underline; }
+    footer {
+  margin-top: 20px;
+  font-size: 13px;
+  color: #666;
+  text-align: center;
+  padding: 12px 0;
+  border-top: 1px solid #eee;
+}
   </style>
 </head>
 
 <body>
   <header>
-    <h1>Noticias — GNews</h1>
+    <h1>El Diario Noticias</h1>
 
     <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Buscar (puedes escribir 'negocios', 'deportes', etc.)">
+      <input id="q" type="search" placeholder="Busca lo que sea...)">
       <button id="btnBuscar">Buscar</button>
     </div>
   </header>
@@ -57,7 +78,7 @@
     <div id="list" class="grid"></div>
   </main>
 
-  <footer><span id="info">—</span></footer>
+<footer>© Agustín Díaz</footer>
 
   <script>
     // categorias: id -> etiqueta en español
