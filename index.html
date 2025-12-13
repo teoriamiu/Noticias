@@ -235,13 +235,14 @@ footer {
     height: 160px;
   }
 }
+h1 {text-align: center;}
 </style>
 </head>
 
 <body>
-
+  <h1>El Diario Noticias</h1>
 <header>
-  <h1>Noticia</h1>
+
   <div class="search">
     <input id="q" type="search" placeholder="Buscar noticias">
     <button id="btnBuscar">Buscar</button>
@@ -263,7 +264,15 @@ footer {
 </footer>
 
 <script>
-const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
+const CATEGORIES = {
+  general: "General",
+  business: "Negocios",
+  entertainment: "Entretenimiento",
+  health: "Salud",
+  science: "Ciencia",
+  sports: "Deportes",
+  technology: "Tecnología"
+};
 
 const qInput = document.getElementById("q");
 const btnBuscar = document.getElementById("btnBuscar");
@@ -273,10 +282,10 @@ const list = document.getElementById("list");
 const hero = document.getElementById("hero");
 const info = document.getElementById("info");
 
-CATEGORIES.forEach(cat => {
+Object.entries(CATEGORIES).forEach(([key, label]) => {
   const b = document.createElement("button");
-  b.textContent = cat;
-  b.onclick = () => load(cat);
+  b.textContent = label; // Español
+  b.onclick = () => load(key); // Inglés (backend)
   cats.appendChild(b);
 });
 
