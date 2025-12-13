@@ -13,7 +13,7 @@ exports.handler = async function(event) {
   try {
     const params = event.queryStringParameters || {};
     const q = (params.q || "").trim();
-    const pageSize = 12;
+    const pageSize = 3;
     const lang = "es";
     const country = "ar";
     

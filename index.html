@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Diario Noticias, 🌍 </title>
+  <title>El Diario Noticias, 🌍 </title>
   
   <!-- SEO -->
   <meta name="description" content="Sitio moderno con noticias actualizadas.">
@@ -31,113 +31,271 @@
   <meta name="twitter:description" content="Descubre todo sobre el increíble Super Alacrán: su origen, poderes y la leyenda que lo rodea. ¡Una criatura épica te espera!">
   <meta name="twitter:image" content="https://i.imgur.com/DApJ91v.jpeg">
 
-  <style>
-    :root { --g: 12px; }
-    html,body { margin:0; padding:0; background:#fff; font-family:system-ui; color:#111; }
-    body { max-width:980px; margin:auto; padding:24px; }
-    h1 { margin:0; font-size:22px; font-weight:600; }
-    header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:18px; }
-    input[type="search"]{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-size:14px;min-width:220px;}
-    button{padding:8px 12px;border:0;border-radius:8px;background:#111;color:#fff;cursor:pointer;font-size:14px;}
-    .cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;}
-    .cats button{background:#fafafa;color:#111;border:1px solid #eee;padding:6px 10px;font-size:13px;border-radius:8px;cursor:pointer;}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:var(--g);}
-    .card{border:1px solid #eee;border-radius:10px;padding:12px;background:#fff;display:flex;flex-direction:column;gap:8px;}
-    .card img{width:100%;height:140px;object-fit:cover;border-radius:6px;}
-    .title{font-weight:600;font-size:15px;}
-    .meta{font-size:12px;color:#666;}
-    #status{margin:14px 0;color:#444;}
-    footer{margin-top:20px;font-size:13px;color:#666;}
-  </style>
+<style>
+:root {
+  --gap: 16px;
+  --gray: #5f6368;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI";
+  background: #fff;
+  color: #202124;
+}
+
+/* ===== HEADER ===== */
+header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+header h1 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.search {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.search input {
+  padding: 8px 12px;
+  border-radius: 24px;
+  border: 1px solid #dadce0;
+  font-size: 14px;
+}
+
+.search button {
+  border: none;
+  background: #1a73e8;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 24px;
+  cursor: pointer;
+}
+
+/* ===== CATEGORIES ===== */
+.cats {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.cats button {
+  background: #f1f3f4;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+/* ===== MAIN ===== */
+main {
+  max-width: 1280px;
+  margin: auto;
+  padding: 16px;
+}
+
+#status {
+  color: var(--gray);
+  margin-bottom: 12px;
+}
+
+/* ===== HERO ===== */
+.hero {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--gap);
+  margin-bottom: 24px;
+}
+
+.hero img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.hero h2 {
+  margin: 0 0 8px;
+  font-size: 22px;
+}
+
+.hero p {
+  color: var(--gray);
+}
+
+/* ===== GRID ===== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--gap);
+}
+
+.card {
+  display: flex;
+  gap: 12px;
+}
+
+.card img {
+  width: 120px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.card .title {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--gray);
+}
+
+/* ===== FOOTER ===== */
+footer {
+  padding: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--gray);
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    flex-direction: column;
+  }
+
+  .card img {
+    width: 100%;
+    height: 160px;
+  }
+}
+</style>
 </head>
 
 <body>
-  <header>
-    <h1>Noticias — GNews</h1>
 
-    <div style="display:flex;gap:8px;">
-      <input id="q" type="search" placeholder="Buscar...">
-      <button id="btnBuscar">Buscar</button>
-    </div>
-  </header>
+<header>
+  <h1>Noticias</h1>
+  <div class="search">
+    <input id="q" type="search" placeholder="Buscar noticias">
+    <button id="btnBuscar">Buscar</button>
+  </div>
+</header>
 
-  <div class="cats" id="cats"></div>
+<div class="cats" id="cats"></div>
 
+<main>
   <div id="status">Cargando...</div>
 
-  <main>
-    <div id="list" class="grid"></div>
-  </main>
+  <section id="hero"></section>
 
-  <footer><span id="info">—</span></footer>
+  <section id="list" class="grid"></section>
+</main>
 
-  <script>
-    const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
+<footer>
+  <span id="info">—</span>
+</footer>
 
-    const qInput = document.getElementById("q");
-    const btnBuscar = document.getElementById("btnBuscar");
-    const cats = document.getElementById("cats");
-    const status = document.getElementById("status");
-    const list = document.getElementById("list");
-    const info = document.getElementById("info");
+<script>
+const CATEGORIES = ["business","entertainment","general","health","science","sports","technology"];
 
-    // Render categorías
-    CATEGORIES.forEach(cat => {
-      const b = document.createElement("button");
-      b.textContent = cat;
-      b.onclick = () => load(cat);
-      cats.appendChild(b);
-    });
+const qInput = document.getElementById("q");
+const btnBuscar = document.getElementById("btnBuscar");
+const cats = document.getElementById("cats");
+const status = document.getElementById("status");
+const list = document.getElementById("list");
+const hero = document.getElementById("hero");
+const info = document.getElementById("info");
 
-    async function fetchNews(q) {
-      const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error("Backend error " + r.status);
-      return await r.json();
-    }
+CATEGORIES.forEach(cat => {
+  const b = document.createElement("button");
+  b.textContent = cat;
+  b.onclick = () => load(cat);
+  cats.appendChild(b);
+});
 
-    function render(articles) {
-      list.innerHTML = "";
-      if (!articles || articles.length === 0) {
-        status.textContent = "No hay resultados.";
-        info.textContent = "0 resultados";
-        return;
-      }
-      status.textContent = "";
-      info.textContent = `Mostrando ${articles.length} noticias`;
-      articles.forEach(a => {
-        const el = document.createElement("div");
-        el.className = "card";
-        el.innerHTML = `
-          ${a.image ? `<img src="${a.image}" alt="">` : ""}
-          <div class="title"><a href="${a.url}" target="_blank">${a.title}</a></div>
-          <div class="meta">${a.source?.name || ""} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleString() : ""}</div>
-          <div>${a.description || ""}</div>
-        `;
-        list.appendChild(el);
-      });
-    }
+async function fetchNews(q) {
+  const url = `/.netlify/functions/news?q=${encodeURIComponent(q)}`;
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("Backend error");
+  return r.json();
+}
 
-    async function load(q="general") {
-      status.textContent = "Cargando...";
-      info.textContent = "";
-      list.innerHTML = "";
+function render(articles) {
+  hero.innerHTML = "";
+  list.innerHTML = "";
 
-      try {
-        const data = await fetchNews(q);
-        render(data.articles);
-      } catch (err) {
-        console.error(err);
-        status.textContent = "Error cargando noticias.";
-        info.textContent = "—";
-      }
-    }
+  if (!articles || !articles.length) {
+    status.textContent = "No hay resultados";
+    return;
+  }
 
-    btnBuscar.onclick = () => load(qInput.value.trim() || "general");
-    qInput.onkeydown = (e) => { if (e.key === "Enter") btnBuscar.click(); };
+  const [first, ...rest] = articles;
 
-    // Inicio
-    load("general");
-  </script>
+  hero.innerHTML = `
+    <div class="hero">
+      <img src="${first.image || ""}">
+      <div>
+        <h2><a href="${first.url}" target="_blank">${first.title}</a></h2>
+        <p>${first.description || ""}</p>
+        <div class="meta">${first.source?.name || ""}</div>
+      </div>
+    </div>
+  `;
+
+  rest.forEach(a => {
+    const el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML = `
+      ${a.image ? `<img src="${a.image}">` : ""}
+      <div>
+        <div class="title"><a href="${a.url}" target="_blank">${a.title}</a></div>
+        <div class="meta">${a.source?.name || ""}</div>
+      </div>
+    `;
+    list.appendChild(el);
+  });
+
+  status.textContent = "";
+  info.textContent = `${articles.length} noticias`;
+}
+
+async function load(q="general") {
+  status.textContent = "Cargando...";
+  try {
+    const data = await fetchNews(q);
+    render(data.articles);
+  } catch {
+    status.textContent = "Error cargando noticias";
+  }
+}
+
+btnBuscar.onclick = () => load(qInput.value.trim() || "general");
+qInput.onkeydown = e => e.key === "Enter" && btnBuscar.click();
+
+load("general");
+</script>
+
 </body>
 </html>
